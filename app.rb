@@ -4,13 +4,14 @@ require './lib/hangperson_game.rb'
 
 class HangpersonApp < Sinatra::Base
 
+  # turn on behaviour to save game state in cookie
   enable :sessions
   register Sinatra::Flash
-  
+  #load game state
   before do
     @game = session[:game] || HangpersonGame.new('')
   end
-  
+  #save game state
   after do
     session[:game] = @game
   end
@@ -24,13 +25,13 @@ class HangpersonApp < Sinatra::Base
   get '/new' do
     erb :new
   end
-  
+  # /create defined in app.rb (along with other urls)
   post '/create' do
-    # NOTE: don't change next line - it's needed by autograder!
+    #get random word
     word = params[:word] || HangpersonGame.get_random_word
-    # NOTE: don't change previous line - it's needed by autograder!
-
+    #create new game using that word
     @game = HangpersonGame.new(word)
+    #redirecting to show url
     redirect '/show'
   end
   
@@ -40,9 +41,31 @@ class HangpersonApp < Sinatra::Base
   post '/guess' do
     letter = params[:guess].to_s[0]
     ### YOUR CODE HERE ###
+    # handle argument errors too
+    begin
+      if !@game.guess(letter)
+        flash[:message] = "You have already used that letter"
+      end
+      if @game.check_win_or_lose == :win
+        redirect '/win'
+      elsif @game.check_win_or_lose == :lose
+        redirect '/lose'
+      else 
+        redirect '/show'
+      end
+    rescue ArgumentError
+      flash[:message] = "Your input was invalid"
+      redirect '/show'
+    end
     redirect '/show'
   end
   
+=begin
+  def guess(letter)
+    
+  end
+=end
+
   # Everytime a guess is made, we should eventually end up at this route.
   # Use existing methods in HangpersonGame to check if player has
   # won, lost, or neither, and take the appropriate action.
