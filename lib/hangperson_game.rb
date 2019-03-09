@@ -1,24 +1,89 @@
 class HangpersonGame
-
-  # add the necessary class methods, attributes, etc. here
-  # to make the tests in spec/hangperson_game_spec.rb pass.
-
-  # Get a word from remote "random word" service
-
-  # def initialize()
-  # end
-  
-  # constant to holde max number of guesses
-  MAX_GUESSES = 7
-  #getters and setters
-  attr_accessor :word , :guesses , :wrong_guesses
-  #constructor
-  def initialize(word)
-    @word = word
-    @guesses = ''
-    @wrong_guesses = ''
-  end
-
+    
+    
+    def initialize(word)
+        @word = word
+        # a for the wrong_guesses and c for the guesses
+        @a = []
+        @c = []
+        # for not displaynig (-----) every time we call word_with_guesses
+        @num = 0
+        @word_with = []
+        @charNum = 0
+    end
+    attr_accessor :word ,:guesses , :wrong_guesses , :win , :lose , :play
+    
+    def guess(char)
+       
+        #check if the char is empty or non-char or nil
+        if  char == '' || /[A-Za-z]/ !~ char || char == nil
+            raise ArgumentError
+        end
+        # eliminating spaces and commas
+         char = char.gsub(/[\s,]/ ,"")
+        
+        @charNum = char.chars.count
+       
+        # check the status of the char
+        char.chars.each do |l|
+            #check if it's correct and not repeated guess
+            if @word.include?(l) && ((@c.include? l) == false)
+                @c.push(l)
+                
+              # check if it's correct and repeated guesses or already in wrong_guesses
+            elsif (@word.include?(l) && ((@c.include?(l)) == true)) || ((@a.include?(l)) == true)
+                    return false
+                     
+               # check if it's already in wrong guesses or already in guesses
+            elsif ((@a.include?(l)) == true) || ((('A'..'Z') === l)) || (((@c.include?(l) == true)))
+                    return false
+                     
+                     
+              # check if the word don't include the char and  not already in wrong_guesses
+             elsif   @a.include?(l) == false && @c.include?(l) == false
+                    @a.push(l)
+                    
+            end
+        # end of each
+        end
+            @wrong_guesses =  @a.join.to_s
+            @guesses = @c.join.to_s
+        
+    end
+    
+    def word_with_guesses
+        #@word.chars = @word.chars
+        if @num == 0
+            @word.chars.each do |l|
+                @word_with.push("-")
+            end
+            @num = 1
+        end
+        a= @word.chars
+        b=@c.join.to_s
+        #check if the guesses chars match the word chars then display it in word_with_guesses
+        for i in 0..b.size - 1
+            for j in 0..@word.size
+                if b[i] == a[j]
+                    @word_with[j] = a[j]
+                end
+            end
+        end
+        
+       @word_with.join.to_s
+    
+    end
+    
+    def check_win_or_lose
+        if word_with_guesses == @word
+            :win
+            elsif @wrong_guesses.chars.count >= 7
+            :lose
+            else
+            :play
+        end
+    end
+    
   # You can test it by running $ bundle exec irb -I. -r app.rb
   # And then in the irb: irb(main):001:0> HangpersonGame.get_random_word
   #  => "cooking"   <-- some random word
@@ -29,88 +94,5 @@ class HangpersonGame
     Net::HTTP.new('watchout4snakes.com').start { |http|
       return http.post(uri, "").body
     }
-  end
-  
-  def guess(letter)
-    if (letter=='' || letter== NIL)
-    raise ArgumentError, "Null is not allowed"
-    end
-	#check if input is not in the alpabet (ie. its a number)
-    if (letter.match(/[^A-Za-z]/))
-      raise ArgumentError, "Numbers not alllowed"
-    end
-	#change guessed letter to lower case
-    letter=letter.downcase()
-	#split word into letters
-    lists=@word.split("")
-	#for each letter
-    lists.each do |list|
-      if(letter==list)
-        @wrong_guesses+=""
-		#add to correct guesses list if its not there already and return true
-        if(!guesses.include?letter)
-          @guesses+=letter
-          return true
-        end
-        return false
-      end
-    end
-    @guesses+= ''
-	#check if incorrect guess is in the wrong list
-    if(!@wrong_guesses.include?letter)
-      @wrong_guesses+=letter
-      return true
-    end
-    return false
-  end
-
-  #method to display guessed word
-  def word_with_guesses
-	#variable to hold guessed word
-    curr= ''
-    var= 0
-	#split guesses list into letters
-    ges=@guesses.split("")
-	#split correct word into letters
-    tmps=@word.split("")
-	#for each letter in correct word and each letter in guess list 
-    tmps.each do |tmp|
-      ges.each do |letter|
-        if(tmp == letter)
-		  #if correct add to display string
-          curr += letter
-          var = 1
-        end
-      end
-      if (var == 0)
-		#display dashes for unknown letters
-        curr += '-'
-      end
-      var = 0
-    end
-    return curr
-  end
-  
-  #method that checks guesses with correct word and counts attempts
-  def check_win_or_lose
-    count = 0
-    tmps = @word.split("")
-    comps = @guesses.split("")
-    tmps.each do |tmp|
-      comps.each do|comp|
-      if(comp==tmp)
-        count += 1
-        break
-      end
-    end
-  end
- 
-  if (@wrong_guesses.length == MAX_GUESSES)  # too many attempts by user
-    :lose
-  elsif (tmps.length == count)  # user wins
-    :win
-  else  #continue playing	
-    :play
-  end
   end
 end
